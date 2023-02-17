@@ -14,8 +14,9 @@ import { Button, Modal, TreeSelect, Row, Col, Avatar, Select as BasicSelect,
     AutoComplete,
     Collapse,
     Space,
+    TextArea,
     Icon } from '../../../index';
-
+import { IconPlusCircle, IconMinusCircle, } from '@douyinfe/semi-icons';
 
 import { ComponentUsingFormState } from '../Hook/hookDemo';
 const { Input, Select, DatePicker, Switch, Slider, CheckboxGroup, Checkbox, RadioGroup, Radio, TimePicker, InputNumber, InputGroup } = Form;
@@ -398,4 +399,87 @@ class ArrayFieldSetValues extends React.Component {
     }
 }
 
-export { ArrayFieldCollapseDemo, ArrayFieldDemo, ArrayFieldWithFormInitValues, ArrayFieldWithInitValue, ArrayFieldSetValues };
+
+
+class AsyncSetArrayField extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            data: [
+                { name: 'Semi D2C', role: 'Engineer' },
+                { name: 'Semi C2D', role: 'Designer' },
+            ]
+        };
+    }
+
+    getFormApi = (formApi) => {
+        this.formApi = formApi;
+    }
+
+    change = () => {
+        let rules = this.formApi.getValue('rules');
+        if (!rules) {
+            efferulests = [];
+        }
+        rules.push({ name: new Date().valueOf(), type: 'Designer', key: rules.length + 1  });
+        setTimeout(() => {
+            this.formApi.setValue('rules', rules);
+        }, 300);
+   }
+
+    render() {
+        let { data } = this.state;
+        const ComponentUsingFormState = () => {
+            const formState = useFormState();
+            return (
+                <TextArea style={{ marginTop: 10 }} value={JSON.stringify(formState)} />
+            );
+        };
+        return (
+            <Form style={{ width: 800 }} labelPosition='left' labelWidth='100px' allowEmpty getFormApi={this.getFormApi}>
+                <ArrayField field='rules' initValue={data}>
+                    {({ add, arrayFields, addWithInitValue }) => (
+                        <React.Fragment>
+                            <Button onClick={this.change} theme='light'>change</Button>
+                            <Button onClick={add} icon={<IconPlusCircle />} theme='light'>Add new line</Button>
+                            <Button icon={<IconPlusCircle />} onClick={() => {addWithInitValue({ name: 'Semi DSM', type: 'Designer' });}} style={{ marginLeft: 8 }}>Add new line with init value</Button>
+                            {
+                                arrayFields.map(({ field, key, remove }, i) => (
+                                    <div key={key} style={{ width: 1000, display: 'flex' }}>
+                                        <Form.Input
+                                            field={`${field}[name]`}
+                                            label={`${field}.name`}
+                                            style={{ width: 200, marginRight: 16 }}
+                                        >
+                                        </Form.Input>
+                                        <Form.Select
+                                            field={`${field}[role]`}
+                                            label={`${field}.role`}
+                                            style={{ width: 120 }}
+                                            optionList={[
+                                                { label: 'Engineer', value: 'Engineer' },
+                                                { label: 'Designer', value: 'Designer' },
+                                            ]}
+                                        >
+                                        </Form.Select>
+                                        <Button
+                                            type='danger'
+                                            theme='borderless'
+                                            icon={<IconMinusCircle />}
+                                            onClick={remove}
+                                            style={{ margin: 12 }}
+                                        />
+                                    </div>
+                                ))
+                            }
+                        </React.Fragment>
+                    )}
+                </ArrayField>
+                <ComponentUsingFormState />
+            </Form>
+        );
+    }
+}
+
+
+export { ArrayFieldCollapseDemo, ArrayFieldDemo, ArrayFieldWithFormInitValues, ArrayFieldWithInitValue, ArrayFieldSetValues, AsyncSetArrayField };

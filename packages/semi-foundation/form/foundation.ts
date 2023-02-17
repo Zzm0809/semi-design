@@ -3,7 +3,7 @@ import BaseFoundation from '../base/foundation';
 import * as ObjectUtil from '../utils/object';
 import isPromise from '../utils/isPromise';
 import { isValid } from './utils';
-import { isUndefined, isFunction, toPath } from 'lodash';
+import { isUndefined, isFunction, toPath, merge } from 'lodash';
 import scrollIntoView, { Options as scrollIntoViewOptions } from 'scroll-into-view-if-needed';
 
 import { BaseFormAdapter, FormState, CallOpts, FieldState, FieldStaff, ComponentProps, setValuesConfig, ArrayFieldStaff } from './interface';
@@ -132,11 +132,14 @@ export default class FormFoundation extends BaseFoundation<BaseFormAdapter> {
     }
 
     // in order to slove byted-issue-289
-    registerArrayField(arrayFieldPath: string, val: any): void {
-        this.updateArrayField(arrayFieldPath, {
-            updateKey: new Date().valueOf(),
-            initValue: val
-        });
+    registerArrayField(arrayFieldPath: string, initValue: any): void {
+        //  save initValue of arrayField, will be use when calling rest
+        // this.updateArrayField(arrayFieldPath, {
+        //     updateKey: new Date().valueOf(),
+        //     initValue: initValue,
+        // });
+        this.registeredArrayField.set(arrayFieldPath, { field: arrayFieldPath, initValue: initValue });
+        
     }
 
     unRegisterArrayField(arrayField: string): void {
@@ -147,9 +150,19 @@ export default class FormFoundation extends BaseFoundation<BaseFormAdapter> {
         return this.registeredArrayField.get(arrayField);
     }
 
-    updateArrayField(arrayField: string, updateValue: any): void {
-        const mergeVal = { ...this.registeredArrayField.get(arrayField), ...updateValue };
-        this.registeredArrayField.set(arrayField, mergeVal);
+    updateArrayField(arrayField: string, updateStaff?: Omit<ArrayFieldStaff, 'field'>): void {
+        const arrayFieldStaff = this.getArrayField(arrayField);
+        const mergeStaff = { ...arrayFieldStaff, ...updateStaff };
+        this.registeredArrayField.set(arrayField, mergeStaff);
+        mergeStaff.forceUpdate(mergeStaff?.updateValue);
+
+        // if (mergeStaff.forceUpdate) {
+        // if (mergeStaff.updateValue) {
+        // mergeStaff.forceUpdate(mergeStaff?.updateValue);
+        // } else {
+        // mergeStaff.forceUpdate();
+        // }
+        // }
     }
 
     validate(fieldPaths?: Array<string>): Promise<unknown> {
@@ -339,7 +352,9 @@ export default class FormFoundation extends BaseFoundation<BaseFormAdapter> {
             const arrayFieldState = this.registeredArrayField.get(path);
             const arrayFieldInitValue = arrayFieldState.initValue;
             this.updateStateValue(path, arrayFieldInitValue, { notNotify: true, notUpdate: true });
-            this.updateArrayField(path, { updateKey: new Date().valueOf() });
+            // TOOD, 加updateValue
+            this.updateArrayField(path, { updateValue: arrayFieldInitValue });
+            // this.updateArrayField(path, { updateKey: new Date().valueOf() });
         });
     }
 
@@ -396,8 +411,12 @@ export default class FormFoundation extends BaseFoundation<BaseFormAdapter> {
         // if there exists any arrayField component in this form
         if (this.registeredArrayField.size) {
             const arrayFieldPaths = [...this.registeredArrayField.keys()];
+
             arrayFieldPaths.forEach(path => {
-                this.updateArrayField(path, { updateKey: new Date().valueOf() });
+                this.updateArrayField(path, {
+                    // updateKey: new Date().valueOf(),
+                    updateValue: ObjectUtil.get(_values, path)
+                });
             });
         }
         // When isOverride is true, there may be a non-existent field in the values passed in, directly synchronized to formState.values
@@ -524,7 +543,9 @@ export default class FormFoundation extends BaseFoundation<BaseFormAdapter> {
 
                 // If the reset happens to be, then update the updateKey corresponding to ArrayField to render it again
                 if (this.getArrayField(field)) {
-                    this.updateArrayField(field, { updateKey: new Date().valueOf() });
+                    //  TODO check一下
+                    // this.updateArrayField(field, { updateKey: new Date().valueOf() });
+                    this.updateArrayField(field);
                 }
             }
         };
@@ -546,7 +567,8 @@ export default class FormFoundation extends BaseFoundation<BaseFormAdapter> {
                     }
                 });
                 if (this.getArrayField(field)) {
-                    this.updateArrayField(field, { updateKey: new Date().valueOf() });
+                    // todo
+                    this.updateArrayField(field);
                 }
             }
         };
@@ -568,7 +590,8 @@ export default class FormFoundation extends BaseFoundation<BaseFormAdapter> {
                     }
                 });
                 if (this.getArrayField(field)) {
-                    this.updateArrayField(field, { updateKey: new Date().valueOf() });
+                    // todo
+                    this.updateArrayField(field);
                 }
             }
         };

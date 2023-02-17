@@ -66,6 +66,7 @@ import {
   ArrayFieldWithFormInitValues,
   ArrayFieldWithInitValue,
   ArrayFieldSetValues,
+  AsyncSetArrayField,
 } from './DynamicField/arrayFieldDemo';
 import { NestArrayField } from './DynamicField/nestArrayField';
 import { ArrayDemo } from './FormApi/arrayDemo';
@@ -197,6 +198,11 @@ ArrayFieldWithArrayFieldInitValue.story = {
 export const ArrayFieldSetValuesDemo = () => <ArrayFieldSetValues />;
 ArrayFieldSetValuesDemo.story ={
   name: 'ArrayField-setValues didMount'
+}
+
+export const AsyncSetArrayFieldDemo  = () => <AsyncSetArrayField></AsyncSetArrayField>;
+AsyncSetArrayFieldDemo.story = {
+  name: 'ArrayField-update async'
 }
 
 export const ArrayFieldNestUsage = () => <NestArrayField />;

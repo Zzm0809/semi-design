@@ -1,7 +1,7 @@
 /* eslint-disable react/destructuring-assignment */
 import React, { Component } from 'react';
 import { getUuidv4 } from '@douyinfe/semi-foundation/utils/uuid';
-import { cloneDeep, isUndefined } from 'lodash';
+import { cloneDeep, isUndefined, isEqual } from 'lodash';
 import { FormUpdaterContext, ArrayFieldContext } from './context';
 import warning from '@douyinfe/semi-foundation/utils/warning';
 import type { ArrayFieldStaff, FormUpdaterContextType } from '@douyinfe/semi-foundation/form/interface';
@@ -101,9 +101,13 @@ class ArrayFieldComponent extends Component<ArrayFieldProps, ArrayFieldState> {
         const initValueCopyForFormState = cloneDeep(initValue);
         const initValueCopyForReset = cloneDeep(initValue);
         context.registerArrayField(field, initValueCopyForReset);
-        // register ArrayField will update state.updateKey to render, So there is no need to execute forceUpdate here
         context.updateStateValue(field, initValueCopyForFormState, { notNotify: true, notUpdate: true });
+    }
 
+    componentDidMount(): void {
+        const { field } = this.props;
+        const updater = this.context;
+        updater.updateArrayField(field, { forceUpdate: this.forceUpdate });
     }
 
     componentWillUnmount() {
@@ -112,23 +116,52 @@ class ArrayFieldComponent extends Component<ArrayFieldProps, ArrayFieldState> {
         updater.unRegisterArrayField(field);
     }
 
-    componentDidUpdate() {
+    // componentDidUpdate() {
+    //     const updater = this.context;
+    //     // const { field } = this.props;
+    //     // const { keys } = this.state;
+    //     // const fieldValues = updater.getValue(field);
+    //     // const updateKey = getUpdateKey(updater.getArrayField(field));
+    //     // // when update form outside, like use formApi.setValue('field', [{newItem1, newItem2}]),  formApi.setValues
+    //     // // re generate keys to update arrayField;
+    //     // if (updateKey !== this.cacheUpdateKey) {
+    //     //     const newKeys = generateKeys(fieldValues, keys);
+    //     //     // eslint-disable-next-line
+    //     //     this.setState({ keys: newKeys });
+    //     //     this.cacheUpdateKey = updateKey;
+    //     //     if (this.cacheUpdateKey !== null) {
+    //     //         this.shouldUseInitValue = false;
+    //     //     }
+    //     // } else {
+    //     //     console.log('not update');
+    //     // }
+    // }
+
+    forceUpdate = (value?: any): void => {
+        // const updater = this.context;
+        // const { field } = this.props;
+        // const { keys } = this.state;
+        // const fieldValues = value ? value : updater.getValue(field);
+        // const updateKey = getUpdateKey(updater.getArrayField(field));
+        // if (updateKey !== this.cacheUpdateKey) {
+        //     const newKeys = generateKeys(fieldValues, keys);
+        //     // eslint-disable-next-line
+        //     this.setState({ keys: newKeys });
+        //     this.cacheUpdateKey = updateKey;
+        //     if (this.cacheUpdateKey !== null) {
+        //         this.shouldUseInitValue = false;
+        //     }
+        // } else {
+        //     // console.log('not update');
+        // }
         const updater = this.context;
         const { field } = this.props;
         const { keys } = this.state;
-        const fieldValues = updater.getValue(field);
-        const updateKey = getUpdateKey(updater.getArrayField(field));
-        // when update form outside, like use formApi.setValue('field', [{newItem1, newItem2}]),  formApi.setValues
-        // re generate keys to update arrayField;
-        if (updateKey !== this.cacheUpdateKey) {
-            const newKeys = generateKeys(fieldValues, keys);
-            // eslint-disable-next-line
-            this.setState({ keys: newKeys });
-            this.cacheUpdateKey = updateKey;
-            if (this.cacheUpdateKey !== null) {
-                this.shouldUseInitValue = false;
-            }
-        }
+        const fieldValues = value ? value : updater.getValue(field);
+        const newKeys = generateKeys(fieldValues, keys);
+        // eslint-disable-next-line
+        this.setState({ keys: newKeys });
+        this.shouldUseInitValue = false;
     }
 
     add() {
@@ -171,7 +204,6 @@ class ArrayFieldComponent extends Component<ArrayFieldProps, ArrayFieldState> {
             newArrayFieldValue.splice(i, 1);
             updater.updateStateValue(field, newArrayFieldValue);
         }
-
         this.setState({ keys: newKeys });
     }
 
